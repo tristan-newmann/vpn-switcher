@@ -70,9 +70,9 @@ namespace SystemTrayApp
         private WpfFormLibrary.ViewModel.SettingsViewModel _settingsViewModel;
 
 
-        private ToolStripMenuItem _startDeviceMenuItem;
-        private ToolStripMenuItem _stopDeviceMenuItem;
-        private ToolStripMenuItem _exitMenuItem;
+        //private ToolStripMenuItem _startDeviceMenuItem;
+        //private ToolStripMenuItem _stopDeviceMenuItem;
+        //private ToolStripMenuItem _exitMenuItem;
 
         private void DisplayStatusMessage(string text)
         {
@@ -239,11 +239,6 @@ namespace SystemTrayApp
         {
             ShowAboutView();
         }
-
-        private void showWebSite_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start("http://www.CodeProject.com/");
-        }
         
         private void exitItem_Click(object sender, EventArgs e)
         {
@@ -266,6 +261,7 @@ namespace SystemTrayApp
         
         private void SetMenuItems()
         {
+            /*
             switch (_deviceManager.Status)
             {
                 case DeviceStatus.Initialised:
@@ -297,28 +293,43 @@ namespace SystemTrayApp
                     System.Diagnostics.Debug.Assert(false, "SetButtonStatus() => Unknown state");
                     break;
             }
+            */
         }
+
+        private string GetGlobalProtectFilesPath()
+        {
+            return  $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Palo Alto Networks\\GlobalProtect";
+        }
+
+        private string GetSwitcherConnectionsListPath()
+        {
+            return $"C:\\Users\\{Environment.UserName}\\Documents\\Switcher";
+        }
+
 
         private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = false;
             var userContextUserName = Environment.UserName;
-            var userContextGlobalProtectPath = "C:\\Users\\" + userContextUserName + "\\AppData\\Local\\Palo Alto Networks\\GlobalProtect";
-            var switcherConnectionsListPath = "C:\\Users\\" + userContextUserName + "\\Documents\\Switcher";
-            var connectionsList = System.IO.Directory.GetDirectories(switcherConnectionsListPath);
+            
+            // TODO: Implement some checks to ensure that this folder actually exists / create if not exist.
+            var connectionsList = System.IO.Directory.GetDirectories(GetSwitcherConnectionsListPath());
 
             if (_notifyIcon.ContextMenuStrip.Items.Count == 0)
             {
-                if (connectionsList.Length > 0)
+                if (connectionsList.Any())
                 {
                     foreach (var item in connectionsList)
                     {
-                        ToolStripMenuItem menuItem = new ToolStripMenuItem(item);
-                        _notifyIcon.ContextMenuStrip.Items.Add(menuItem);
+                        var itemLabel = item.Split('\\').Last();
+                        ToolStripMenuItem menuItem = new ToolStripMenuItem(itemLabel);
                         menuItem.DropDownItems.Add(ToolStripMenuItemWithHandler("Enable", "Enables Connection in Global Protect", copyConnectionFiles_Click));
+                        _notifyIcon.ContextMenuStrip.Items.Add(menuItem);
+                       
                     }
                 }
-                /* 
+                
+                /*
                 _startDeviceMenuItem = ToolStripMenuItemWithHandler(
                     "Start Device",
                     "Starts the device",
@@ -330,13 +341,14 @@ namespace SystemTrayApp
                     startStopReaderItem_Click);
                 _notifyIcon.ContextMenuStrip.Items.Add(_stopDeviceMenuItem);
                 */
+               
                 _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
                 _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("Device S&tatus", "Shows the device status dialog", showStatusItem_Click));
                 _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("&About", "Shows the About dialog", showHelpItem_Click));
-                _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("Code Project &Web Site", "Navigates to the Code Project Web Site", showWebSite_Click));
+                //_notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("Code Project &Web Site", "Navigates to the Code Project Web Site", showWebSite_Click));
                 _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
-                _exitMenuItem = ToolStripMenuItemWithHandler("&Exit", "Exits System Tray App", exitItem_Click);
-                _notifyIcon.ContextMenuStrip.Items.Add(_exitMenuItem);
+                //_exitMenuItem = ToolStripMenuItemWithHandler("&Exit", "Exits System Tray App", exitItem_Click);
+                //_notifyIcon.ContextMenuStrip.Items.Add(_exitMenuItem);
             }
 
             SetMenuItems();
