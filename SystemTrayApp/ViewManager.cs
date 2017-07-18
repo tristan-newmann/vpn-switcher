@@ -10,11 +10,11 @@ namespace SystemTrayApp
 {
     public class ViewManager
     {
-        public ViewManager(IDeviceManager deviceManager)
+        public ViewManager(IConnectionsManager connectionManger)
         {
-            System.Diagnostics.Debug.Assert(deviceManager != null);
 
-            _deviceManager = deviceManager;
+            System.Diagnostics.Debug.Assert(connectionManger != null);
+            _connectionsManager = connectionManger;
 
             _components = new System.ComponentModel.Container();
             _notifyIcon = new System.Windows.Forms.NotifyIcon(_components)
@@ -28,14 +28,13 @@ namespace SystemTrayApp
             _notifyIcon.ContextMenuStrip.Opening += ContextMenuStrip_Opening;
             _notifyIcon.DoubleClick += notifyIcon_DoubleClick;
             _notifyIcon.MouseUp += notifyIcon_MouseUp;
-
             _aboutViewModel = new WpfFormLibrary.ViewModel.AboutViewModel();
-            _statusViewModel = new WpfFormLibrary.ViewModel.StatusViewModel();
-
-            _settingsViewModel = new WpfFormLibrary.ViewModel.SettingsViewModel();
-
-            _statusViewModel.Icon = AppIcon;
-            _aboutViewModel.Icon = _statusViewModel.Icon;
+            _settingsViewModel = new WpfFormLibrary.ViewModel.SettingsViewModel(
+                   _connectionsManager.GetExistingConnections,
+                   _connectionsManager.RemoveConnection,
+                   _connectionsManager.AddNewConnection
+             );
+            _aboutViewModel.Icon = _settingsViewModel.Icon;
 
             _hiddenWindow = new System.Windows.Window();
             _hiddenWindow.Hide();
@@ -45,7 +44,7 @@ namespace SystemTrayApp
         {
             get
             {
-                System.Drawing.Icon icon = (_deviceManager.Status == DeviceStatus.Running) ? Properties.Resources.ReadyIcon : Properties.Resources.NotReadyIcon;
+                System.Drawing.Icon icon = Properties.Resources.ReadyIcon;
                 return System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
                     icon.Handle, 
                     System.Windows.Int32Rect.Empty, 
@@ -59,12 +58,10 @@ namespace SystemTrayApp
         private System.ComponentModel.IContainer _components;
         // The Windows system tray class
         private NotifyIcon _notifyIcon;  
-        IDeviceManager _deviceManager;
+        private IConnectionsManager _connectionsManager;
 
         private WpfFormLibrary.View.AboutView _aboutView;
         private WpfFormLibrary.ViewModel.AboutViewModel _aboutViewModel;
-        private WpfFormLibrary.View.StatusView _statusView;
-        private WpfFormLibrary.ViewModel.StatusViewModel _statusViewModel;
 
         private WpfFormLibrary.View.SettingsView _settingsView;
         private WpfFormLibrary.ViewModel.SettingsViewModel _settingsViewModel;
@@ -78,80 +75,13 @@ namespace SystemTrayApp
         {
             _hiddenWindow.Dispatcher.Invoke(delegate
             {
-                _notifyIcon.BalloonTipText = _deviceManager.DeviceName + ": " + text;
+                _notifyIcon.BalloonTipText = "null" + ": " + text;
                 // The timeout is ignored on recent Windows
                 _notifyIcon.ShowBalloonTip(3000);
             });
         }
 
-        private void UpdateStatusView()
-        {
-            if ((_statusViewModel != null) && (_deviceManager != null))
-            {
-                List<KeyValuePair<string, bool>> flags = _deviceManager.StatusFlags;
-                List<KeyValuePair<string, string>> statusItems = flags.Select(n => new KeyValuePair<string, string>(n.Key, n.Value.ToString())).ToList();
-                statusItems.Insert(0, new KeyValuePair<string, string>("Device", _deviceManager.DeviceName));
-                statusItems.Insert(1, new KeyValuePair<string, string>("Status", _deviceManager.Status.ToString()));
-                _statusViewModel.SetStatusFlags(statusItems);
-            }
-        }
-
-        public void OnStatusChange()
-        {
-            UpdateStatusView();
-
-            switch (_deviceManager.Status)
-            {
-                case DeviceStatus.Initialised:
-                    _notifyIcon.Text = _deviceManager.DeviceName + ": Ready";
-                    _notifyIcon.Icon = Properties.Resources.NotReadyIcon;
-                    DisplayStatusMessage("Idle");
-                    break;
-                case DeviceStatus.Running:
-                    _notifyIcon.Text = _deviceManager.DeviceName + ": Running";
-                    _notifyIcon.Icon = Properties.Resources.ReadyIcon;
-                    DisplayStatusMessage("Running");
-                    break;
-                case DeviceStatus.Starting:
-                    _notifyIcon.Text = _deviceManager.DeviceName + ": Starting";
-                    _notifyIcon.Icon = Properties.Resources.NotReadyIcon;
-                    DisplayStatusMessage("Starting");
-                    break;
-                case DeviceStatus.Uninitialised:
-                    _notifyIcon.Text = _deviceManager.DeviceName + ": Not Ready";
-                    _notifyIcon.Icon = Properties.Resources.NotReadyIcon;
-                    break;
-                case DeviceStatus.Error:
-                    _notifyIcon.Text = _deviceManager.DeviceName + ": Error Detected";
-                    _notifyIcon.Icon = Properties.Resources.NotReadyIcon;
-                    break;
-                default:
-                    _notifyIcon.Text = _deviceManager.DeviceName + ": -";
-                    _notifyIcon.Icon = Properties.Resources.NotReadyIcon;
-                    break;
-            }
-            System.Windows.Media.ImageSource icon = AppIcon;
-            if (_aboutView != null)
-            {
-                _aboutView.Icon = AppIcon;
-            }
-            if (_statusView != null)
-            {
-                _statusView.Icon = AppIcon;
-            }
-        }
-
-        private void startStopReaderItem_Click(object sender, EventArgs e)
-        {
-            if (_deviceManager.Status == DeviceStatus.Running)
-            {
-                _deviceManager.Stop();
-            }
-            else
-            {
-                _deviceManager.Start();
-            }
-        }
+        private void UpdateSettingsView() { }
         
         private ToolStripMenuItem ToolStripMenuItemWithHandler(string displayText, string tooltipText, EventHandler eventHandler)
         {
@@ -165,53 +95,30 @@ namespace SystemTrayApp
             return item;
         }
         
-        private void ShowStatusView()
-        {
-            if (_statusView == null)
-            {
-                _statusView = new WpfFormLibrary.View.StatusView();
-                _statusView.DataContext = _statusViewModel;
-
-                _statusView.Closing += ((arg_1, arg_2) => _statusView = null);
-                _statusView.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
-                _statusView.Show();
-                UpdateStatusView();
-            }
-            else
-            {
-                _statusView.Activate();
-            }
-            _statusView.Icon = AppIcon;
-        }
-
-        private void ShowSettingsView()
+        private void ShowSettingsView_Click(object sender, EventArgs e)
         {
             if (_settingsView == null)
             {
-                _statusView = new WpfFormLibrary.View.StatusView();
-                _statusView.DataContext = _statusViewModel;
+                _settingsView = new WpfFormLibrary.View.SettingsView();
+                _settingsView.DataContext = _settingsViewModel;
 
-                _statusView.Closing += ((arg_1, arg_2) => _statusView = null);
-                _statusView.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
-                _statusView.Show();
-                UpdateStatusView();
+                _settingsView.Closing += ((arg_1, arg_2) => _settingsView = null);
+                _settingsView.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
+                _settingsView.Show();
+                UpdateSettingsView();
             }
             else
             {
-                _statusView.Activate();
+                _settingsView.Activate();
             }
-            _statusView.Icon = AppIcon;
+            _settingsView.Icon = AppIcon;
         }
 
-        private void copyConnectionFiles_Click(object sender, EventArgs e)
+        private void CopyConnectionFiles_Click(object sender, EventArgs e)
         {
-
+           
         }
 
-        private void showStatusItem_Click(object sender, EventArgs e)
-        {
-            ShowStatusView();
-        }
 
         private void ShowAboutView()
         {
@@ -230,7 +137,7 @@ namespace SystemTrayApp
             }
             _aboutView.Icon = AppIcon;
 
-            _aboutViewModel.AddVersionInfo("Hardware", _deviceManager.DeviceName);
+            _aboutViewModel.AddVersionInfo("Hardware", "null");
             _aboutViewModel.AddVersionInfo("Version", Assembly.GetExecutingAssembly().GetName().Version.ToString());
             _aboutViewModel.AddVersionInfo("Serial Number", "142573462354");
         }
@@ -238,11 +145,6 @@ namespace SystemTrayApp
         private void showHelpItem_Click(object sender, EventArgs e)
         {
             ShowAboutView();
-        }
-        
-        private void exitItem_Click(object sender, EventArgs e)
-        {
-            Application.Exit();
         }
 
         private void notifyIcon_DoubleClick(object sender, EventArgs e)
@@ -258,62 +160,18 @@ namespace SystemTrayApp
                 mi.Invoke(_notifyIcon, null);
             }
         }
-        
-        private void SetMenuItems()
-        {
-            /*
-            switch (_deviceManager.Status)
-            {
-                case DeviceStatus.Initialised:
-                    _startDeviceMenuItem.Enabled = true;
-                    _stopDeviceMenuItem.Enabled = false;
-                    _exitMenuItem.Enabled = true;
-                    break;
-                case DeviceStatus.Starting:
-                    _startDeviceMenuItem.Enabled = false;
-                    _stopDeviceMenuItem.Enabled = false;
-                    _exitMenuItem.Enabled = false;
-                    break;
-                case DeviceStatus.Running:
-                    _startDeviceMenuItem.Enabled = false;
-                    _stopDeviceMenuItem.Enabled = true;
-                    _exitMenuItem.Enabled = true;
-                    break;
-                case DeviceStatus.Uninitialised:
-                    _startDeviceMenuItem.Enabled = false;
-                    _stopDeviceMenuItem.Enabled = false;
-                    _exitMenuItem.Enabled = true;
-                    break;
-                case DeviceStatus.Error:
-                    _startDeviceMenuItem.Enabled = false;
-                    _stopDeviceMenuItem.Enabled = false;
-                    _exitMenuItem.Enabled = true;
-                    break;
-                default:
-                    System.Diagnostics.Debug.Assert(false, "SetButtonStatus() => Unknown state");
-                    break;
-            }
-            */
-        }
 
-        private string GetGlobalProtectFilesPath()
-        {
-            return  $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Palo Alto Networks\\GlobalProtect";
-        }
 
-        private string GetSwitcherConnectionsListPath()
-        {
-            return $"C:\\Users\\{Environment.UserName}\\Documents\\Switcher";
-        }
+
 
 
         private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = false;
             var userContextUserName = Environment.UserName;
-            
+
             // TODO: Implement some checks to ensure that this folder actually exists / create if not exist.
-            var connectionsList = System.IO.Directory.GetDirectories(GetSwitcherConnectionsListPath());
+            var connectionsList = _connectionsManager.GetExistingConnections();
 
             if (_notifyIcon.ContextMenuStrip.Items.Count == 0)
             {
@@ -323,35 +181,17 @@ namespace SystemTrayApp
                     {
                         var itemLabel = item.Split('\\').Last();
                         ToolStripMenuItem menuItem = new ToolStripMenuItem(itemLabel);
-                        menuItem.DropDownItems.Add(ToolStripMenuItemWithHandler("Enable", "Enables Connection in Global Protect", copyConnectionFiles_Click));
+                        menuItem.DropDownItems.Add(ToolStripMenuItemWithHandler("Enable", "Enables Connection in Global Protect", CopyConnectionFiles_Click));
                         _notifyIcon.ContextMenuStrip.Items.Add(menuItem);
                        
                     }
                 }
                 
-                /*
-                _startDeviceMenuItem = ToolStripMenuItemWithHandler(
-                    "Start Device",
-                    "Starts the device",
-                    startStopReaderItem_Click);
-                _notifyIcon.ContextMenuStrip.Items.Add(_startDeviceMenuItem);
-                _stopDeviceMenuItem = ToolStripMenuItemWithHandler(
-                    "Stop Device",
-                    "Stops the device",
-                    startStopReaderItem_Click);
-                _notifyIcon.ContextMenuStrip.Items.Add(_stopDeviceMenuItem);
-                */
                
                 _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
-                _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("Device S&tatus", "Shows the device status dialog", showStatusItem_Click));
+                _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("Settings", "Configure and edit connections", ShowSettingsView_Click));
                 _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("&About", "Shows the About dialog", showHelpItem_Click));
-                //_notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("Code Project &Web Site", "Navigates to the Code Project Web Site", showWebSite_Click));
-                _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
-                //_exitMenuItem = ToolStripMenuItemWithHandler("&Exit", "Exits System Tray App", exitItem_Click);
-                //_notifyIcon.ContextMenuStrip.Items.Add(_exitMenuItem);
             }
-
-            SetMenuItems();
         }
     }
 }

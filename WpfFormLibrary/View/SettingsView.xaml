@@ -23,20 +23,35 @@
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0" Padding="10" BorderBrush="Black" Height="auto" BorderThickness="0">
-            <DataGrid Padding="0" GridLinesVisibility="None" HeadersVisibility="None" ItemsSource="{Binding StatusFlags}" RowHeaderWidth="0" IsTabStop="True" Background="White" AutoGenerateColumns="False" IsReadOnly="True">
-                <DataGrid.CellStyle>
-                    <Style TargetType="DataGridCell">
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                    </Style>
-                </DataGrid.CellStyle>
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0" Padding="10" BorderBrush="Black" Height="auto" BorderThickness="0"/>
+        <Label Content="Enter new connection name" Grid.ColumnSpan="2" Margin="0,0,122,0" Width="198"/>
+        <TextBox Name="NewConnectionName" Margin="24,30,23,258" Grid.ColumnSpan="2" Text="{Binding NewConnectionName}" />
+            <Button Margin="27,67,23,221" Grid.Column="1" Name="CaptureConnectionButton" Content="Capture" Command="{Binding _AddConnection}" CommandParameter="{Binding Path=NewConnectionName}" />
 
-                <DataGrid.Columns>
-                    <DataGridTextColumn Binding="{Binding Key}" />
-                    <DataGridTextColumn Binding="{Binding Value}" />
-                </DataGrid.Columns>
-            </DataGrid>
-        </Border>
+        <Label Content="Existing Connections" Margin="10,110,3,178" />
+        <DataGrid AutoGenerateColumns="False" 
+                  IsReadOnly="True"
+          Height="168" 
+          HorizontalAlignment="Left" 
+          Name="connectionsGrid" 
+          VerticalAlignment="Top"
+          ItemsSource="{Binding Connections}"
+                  
+          Width="300" Grid.ColumnSpan="2" Margin="10,142,0,0">
+            <DataGrid.Columns>
+
+                <!-- Add your normal columns here -->
+                <DataGridTextColumn Binding="{Binding Path=ConnectionDir}" MinWidth="50" />
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button     >
+                                Remove
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </Window>

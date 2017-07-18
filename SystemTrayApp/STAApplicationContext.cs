@@ -11,29 +11,18 @@ namespace SystemTrayApp
     {
         public STAApplicationContext()
         {
-            _deviceManager = new DeviceManager();
-            _viewManager = new ViewManager(_deviceManager);
+            _connectionManager = new ConnectionsManager();
+            _viewManager = new ViewManager(_connectionManager);
 
-            _deviceManager.OnStatusChange += _viewManager.OnStatusChange;
-
-            _deviceManager.Initialise();
         }
 
+        private IConnectionsManager _connectionManager;
         private ViewManager _viewManager;
-        private DeviceManager _deviceManager;
 
         // Called from the Dispose method of the base class
         protected override void Dispose(bool disposing)
         {
-            if ((_deviceManager != null) && (_viewManager != null))
-            {
-                _deviceManager.OnStatusChange -= _viewManager.OnStatusChange;
-            }
-            if (_deviceManager != null)
-            {
-                _deviceManager.Terminate();
-            }
-            _deviceManager = null;
+            _connectionManager = null;
             _viewManager = null;
         }
     }
