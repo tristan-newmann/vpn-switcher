@@ -20,8 +20,8 @@ namespace SystemTrayApp
             _notifyIcon = new System.Windows.Forms.NotifyIcon(_components)
             {
                 ContextMenuStrip = new ContextMenuStrip(),
-                Icon = SystemTrayApp.Properties.Resources.NotReadyIcon,
-                Text = "System Tray App: Device Not Present",
+                Icon = SystemTrayApp.Properties.Resources.ReadyIcon,
+                Text = "Global Protect Connection Switcher",
                 Visible = true,
             };
 
@@ -31,6 +31,8 @@ namespace SystemTrayApp
 
             _aboutViewModel = new WpfFormLibrary.ViewModel.AboutViewModel();
             _statusViewModel = new WpfFormLibrary.ViewModel.StatusViewModel();
+
+            _settingsViewModel = new WpfFormLibrary.ViewModel.SettingsViewModel();
 
             _statusViewModel.Icon = AppIcon;
             _aboutViewModel.Icon = _statusViewModel.Icon;
@@ -63,6 +65,10 @@ namespace SystemTrayApp
         private WpfFormLibrary.ViewModel.AboutViewModel _aboutViewModel;
         private WpfFormLibrary.View.StatusView _statusView;
         private WpfFormLibrary.ViewModel.StatusViewModel _statusViewModel;
+
+        private WpfFormLibrary.View.SettingsView _settingsView;
+        private WpfFormLibrary.ViewModel.SettingsViewModel _settingsViewModel;
+
 
         private ToolStripMenuItem _startDeviceMenuItem;
         private ToolStripMenuItem _stopDeviceMenuItem;
@@ -176,6 +182,30 @@ namespace SystemTrayApp
                 _statusView.Activate();
             }
             _statusView.Icon = AppIcon;
+        }
+
+        private void ShowSettingsView()
+        {
+            if (_settingsView == null)
+            {
+                _statusView = new WpfFormLibrary.View.StatusView();
+                _statusView.DataContext = _statusViewModel;
+
+                _statusView.Closing += ((arg_1, arg_2) => _statusView = null);
+                _statusView.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
+                _statusView.Show();
+                UpdateStatusView();
+            }
+            else
+            {
+                _statusView.Activate();
+            }
+            _statusView.Icon = AppIcon;
+        }
+
+        private void copyConnectionFiles_Click(object sender, EventArgs e)
+        {
+
         }
 
         private void showStatusItem_Click(object sender, EventArgs e)
