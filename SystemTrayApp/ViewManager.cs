@@ -303,18 +303,22 @@ namespace SystemTrayApp
         {
             e.Cancel = false;
             var userContextUserName = Environment.UserName;
-            var userContextGlobalProtectPath = "C:\\Users\\"+userContextUserName+"\\AppData\\Local\\Palo Alto Networks\\GlobalProtect";
-            var connectionsList = System.IO.Directory.GetDirectories(userContextGlobalProtectPath);
-
-            foreach (var item in connectionsList)
-            {
-                ToolStripMenuItem menuItem = new ToolStripMenuItem(item);
-                _notifyIcon.ContextMenuStrip.Items.Add(menuItem);
-                menuItem.DropDownItems.Add(ToolStripMenuItemWithHandler("Enable", "Enables Connection in Global Protect", copyConnectionFiles_Click));
-            }
+            var userContextGlobalProtectPath = "C:\\Users\\" + userContextUserName + "\\AppData\\Local\\Palo Alto Networks\\GlobalProtect";
+            var switcherConnectionsListPath = "C:\\Users\\" + userContextUserName + "\\Documents\\Switcher";
+            var connectionsList = System.IO.Directory.GetDirectories(switcherConnectionsListPath);
 
             if (_notifyIcon.ContextMenuStrip.Items.Count == 0)
             {
+                if (connectionsList.Length > 0)
+                {
+                    foreach (var item in connectionsList)
+                    {
+                        ToolStripMenuItem menuItem = new ToolStripMenuItem(item);
+                        _notifyIcon.ContextMenuStrip.Items.Add(menuItem);
+                        menuItem.DropDownItems.Add(ToolStripMenuItemWithHandler("Enable", "Enables Connection in Global Protect", copyConnectionFiles_Click));
+                    }
+                }
+                /* 
                 _startDeviceMenuItem = ToolStripMenuItemWithHandler(
                     "Start Device",
                     "Starts the device",
@@ -325,6 +329,7 @@ namespace SystemTrayApp
                     "Stops the device",
                     startStopReaderItem_Click);
                 _notifyIcon.ContextMenuStrip.Items.Add(_stopDeviceMenuItem);
+                */
                 _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
                 _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("Device S&tatus", "Shows the device status dialog", showStatusItem_Click));
                 _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("&About", "Shows the About dialog", showHelpItem_Click));
