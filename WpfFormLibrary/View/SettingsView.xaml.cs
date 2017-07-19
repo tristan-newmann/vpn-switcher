@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using WpfFormLibrary.ViewModel;
 
 namespace WpfFormLibrary.View
 {
@@ -38,10 +39,10 @@ namespace WpfFormLibrary.View
 
         private void CaptureConnectionButton_Click(object sender, RoutedEventArgs e)
         {
-            // Validate the connection name?
-            // Somehow invoke the method on the viewmodel
+            var viewModel = (SettingsViewModel)DataContext;
+            Console.WriteLine(viewModel.NewConnectionName);
+            viewModel.AddConnection("test");
         }
-
     }
     
 }

@@ -25,10 +25,11 @@
         </Grid.ColumnDefinitions>
         <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0" Padding="10" BorderBrush="Black" Height="auto" BorderThickness="0"/>
         <Label Content="Enter new connection name" Grid.ColumnSpan="2" Margin="0,0,122,0" Width="198"/>
-        <TextBox Name="NewConnectionNameTextBox" Margin="24,30,23,258" Grid.ColumnSpan="2" Text="{Binding Path=NewConnectionName}"/>
-            <Button Margin="27,67,23,221" Grid.Column="1" Name="CaptureConnectionButton" Content="Capture" Command="{Binding _AddConnection}" CommandParameter="{Binding Path=NewConnectionName}" />
+        <TextBox Name="NewConnectionNameTextBox" Margin="24,30,23,258" Grid.ColumnSpan="2" Text="{Binding Path = NewConnectionName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+        <Button Margin="27,67,23,221" Grid.Column="1" Name="CaptureConnectionButton" Content="Capture" Click="CaptureConnectionButton_Click">
+        </Button>
 
-        <Label Content="Existing Connections" Margin="10,110,3,178" />
+        <Label Content="Existing Connections:" Margin="10,110,122,178" Grid.ColumnSpan="2" Width="188" />
         <DataGrid AutoGenerateColumns="False" 
                   IsReadOnly="True"
           Height="168" 
