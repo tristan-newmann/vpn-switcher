@@ -48,7 +48,18 @@ namespace WpfFormLibrary.ViewModel
 
         private bool _isRunning = false;
 
-        public string NewConnectionName { get; set; }
+        private string _newConnectionName;
+        public string NewConnectionName {
+            get
+            {
+                return _newConnectionName;
+            }
+            set
+            {
+                _newConnectionName = value;
+                OnPropertyChanged("NewConnectionName");
+            }
+        }
 
         public ObservableCollection<Connection> Connections
         {

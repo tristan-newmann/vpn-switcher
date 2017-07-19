@@ -16,7 +16,9 @@ namespace SystemTrayApp
         public IEnumerable<string> GetExistingConnections()
         {
             var connectionsList = System.IO.Directory.GetDirectories(GetSwitcherConnectionsListPath());
-            return connectionsList.ToList();
+            return connectionsList
+                .ToList()
+                .Select(dir => dir.Split('\\').Last());
         }
 
         public bool RemoveConnection(string connectionName)

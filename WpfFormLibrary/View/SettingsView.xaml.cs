@@ -41,6 +41,7 @@ namespace WpfFormLibrary.View
             // Validate the connection name?
             // Somehow invoke the method on the viewmodel
         }
+
     }
     
 }

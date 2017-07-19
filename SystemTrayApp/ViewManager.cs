@@ -67,10 +67,6 @@ namespace SystemTrayApp
         private WpfFormLibrary.ViewModel.SettingsViewModel _settingsViewModel;
 
 
-        //private ToolStripMenuItem _startDeviceMenuItem;
-        //private ToolStripMenuItem _stopDeviceMenuItem;
-        //private ToolStripMenuItem _exitMenuItem;
-
         private void DisplayStatusMessage(string text)
         {
             _hiddenWindow.Dispatcher.Invoke(delegate
@@ -179,8 +175,8 @@ namespace SystemTrayApp
                 {
                     foreach (var item in connectionsList)
                     {
-                        var itemLabel = item.Split('\\').Last();
-                        ToolStripMenuItem menuItem = new ToolStripMenuItem(itemLabel);
+                        
+                        ToolStripMenuItem menuItem = new ToolStripMenuItem(item);
                         menuItem.DropDownItems.Add(ToolStripMenuItemWithHandler("Enable", "Enables Connection in Global Protect", CopyConnectionFiles_Click));
                         _notifyIcon.ContextMenuStrip.Items.Add(menuItem);
                        
