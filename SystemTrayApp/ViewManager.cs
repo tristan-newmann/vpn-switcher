@@ -100,7 +100,8 @@ namespace SystemTrayApp
 
                 _settingsView.Closing += ((arg_1, arg_2) => _settingsView = null);
                 _settingsView.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
-                _settingsView.Show();
+                //ElementHost.EnableModelessKeyboardInterop(_settingsView);
+                _settingsView.ShowDialog();
                 UpdateSettingsView();
             }
             else
@@ -110,9 +111,9 @@ namespace SystemTrayApp
             _settingsView.Icon = AppIcon;
         }
 
-        private void CopyConnectionFiles_Click(object sender, EventArgs e)
+        private void CopyConnectionFiles_Click(string connection)
         {
-           
+            _connectionsManager.SetAsCurrentConnection(connection);
         }
 
 
@@ -157,9 +158,10 @@ namespace SystemTrayApp
             }
         }
 
-
-
-
+        private void ExitItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
 
         private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -173,11 +175,11 @@ namespace SystemTrayApp
             {
                 if (connectionsList.Any())
                 {
-                    foreach (var item in connectionsList)
+                    foreach (var connection in connectionsList)
                     {
                         
-                        ToolStripMenuItem menuItem = new ToolStripMenuItem(item);
-                        menuItem.DropDownItems.Add(ToolStripMenuItemWithHandler("Enable", "Enables Connection in Global Protect", CopyConnectionFiles_Click));
+                        ToolStripMenuItem menuItem = new ToolStripMenuItem(connection);
+                        menuItem.DropDownItems.Add(ToolStripMenuItemWithHandler("Enable", "Enables Connection in Global Protect", (h, x) => { CopyConnectionFiles_Click(connection); }));
                         _notifyIcon.ContextMenuStrip.Items.Add(menuItem);
                        
                     }
@@ -187,6 +189,9 @@ namespace SystemTrayApp
                 _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
                 _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("Settings", "Configure and edit connections", ShowSettingsView_Click));
                 _notifyIcon.ContextMenuStrip.Items.Add(ToolStripMenuItemWithHandler("&About", "Shows the About dialog", showHelpItem_Click));
+                _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
+                ToolStripMenuItem _exitMenuItem = ToolStripMenuItemWithHandler("&Exit", "Exits System Tray App", ExitItem_Click);
+                _notifyIcon.ContextMenuStrip.Items.Add(_exitMenuItem);
             }
         }
     }

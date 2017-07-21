@@ -91,6 +91,7 @@
     <ProjectReference Include="..\WpfFormLibrary\WpfFormLibrary.csproj">
       <Project>{ec9652c9-aeec-48ea-bd5d-f00e3c80eabb}</Project>
       <Name>WpfFormLibrary</Name>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
